@@ -1,0 +1,51 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Streamlit local config
+.streamlit/secrets.toml
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Local logs
+*.log
+
+# Temporary backup files
+dashboard/app_before_*.py
+
+# Optional local checkpoints
+checkpoints/
+
+# Data backup/intermediate files
+data/*before*.csv
+data/*backup*.csv
+data/*realistic_proxy.csv
+data/*sources*.csv
+
+# Local notebooks, not needed for Streamlit deployment
+*.ipynb
+
+# Old non-Elo models
+models/match_result_model.pkl
+models/model_features.pkl
+
+# Training and intermediate data, not needed for deployment
+data/latest_team_stats.csv
+data/training_table.csv
+data/training_table_elo.csv
+data/world_cup_2026_squad_strength.csv
+data/world_cup_2026_squad_strength_scored_with_fifa.csv
+data/world_cup_2026_stats.csv
+data/world_cup_2026_stats_elo.csv
+data/fifa_mens_ranking_official.csv
