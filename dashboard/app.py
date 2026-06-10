@@ -1775,44 +1775,51 @@ with tab_group:
         ),
     )
 
-    monte_carlo_group_table = simulate_group_monte_carlo(
-        selected_group,
-        n_simulations=int(monte_carlo_simulations),
-        adjustment_weight=group_adjustment_weight,
-        use_injury_adjustment=use_injury_adjustment_group,
-        random_seed=42,
+    run_group_monte_carlo = st.button(
+        "运行 Monte Carlo 模拟",
+        key="run_group_monte_carlo",
     )
 
-    st.dataframe(monte_carlo_group_table)
+    if run_group_monte_carlo:
+        with st.spinner("正在模拟小组赛，请稍等..."):
+            monte_carlo_group_table = simulate_group_monte_carlo(
+                selected_group,
+                n_simulations=int(monte_carlo_simulations),
+                adjustment_weight=group_adjustment_weight,
+                use_injury_adjustment=use_injury_adjustment_group,
+                random_seed=42,
+            )
 
-    fig_group_monte_carlo = px.bar(
-        monte_carlo_group_table,
-        x="team",
-        y="qualification_%",
-        text="qualification_%",
-        title=f"{selected_group} Monte Carlo Qualification Probability",
-    )
+        st.dataframe(monte_carlo_group_table)
 
-    fig_group_monte_carlo.update_traces(
-        texttemplate="%{text:.1f}%",
-        textposition="outside",
-    )
+        fig_group_monte_carlo = px.bar(
+            monte_carlo_group_table,
+            x="team",
+            y="qualification_%",
+            text="qualification_%",
+            title=f"{selected_group} Monte Carlo Qualification Probability",
+        )
 
-    fig_group_monte_carlo.update_layout(
-        yaxis_title="Qualification Probability (%)",
-        xaxis_title="Team",
-    )
+        fig_group_monte_carlo.update_traces(
+            texttemplate="%{text:.1f}%",
+            textposition="outside",
+        )
 
-    st.plotly_chart(
-        fig_group_monte_carlo,
-        use_container_width=True,
-        key="group_monte_carlo_qualification_chart",
-    )
+        fig_group_monte_carlo.update_layout(
+            yaxis_title="Qualification Probability (%)",
+            xaxis_title="Team",
+        )
 
-    st.caption(
-        "Monte Carlo 结果表示在当前模型概率下反复模拟小组赛后的出线概率。"
-        "由于当前版本只模拟胜 / 平 / 负，不模拟具体比分，因此同分时的排名规则使用 points、wins、Elo、综合强度和随机 tie-breaker 近似处理。"
-    )
+        st.plotly_chart(
+            fig_group_monte_carlo,
+            use_container_width=True,
+            key="group_monte_carlo_qualification_chart",
+        )
+
+        st.caption(
+            "Monte Carlo 结果表示在当前模型概率下反复模拟小组赛后的出线概率。"
+            "由于当前版本只模拟胜 / 平 / 负，不模拟具体比分，因此同分时的排名规则使用 points、wins、Elo、综合强度和随机 tie-breaker 近似处理。"
+        )
 
 
 # =========================
