@@ -12,7 +12,7 @@ import streamlit as st
 # =========================
 
 st.set_page_config(
-    page_title="World Cup 2026 Predictor",
+    page_title="2026 世界杯预测",
     page_icon="⚽",
     layout="wide",
 )
@@ -441,7 +441,7 @@ def make_probability_chart(prediction):
         x="result",
         y="probability_percent",
         text="probability_percent",
-        title="Win / Draw / Loss Probability",
+        title="胜 / 平 / 负概率",
     )
 
     fig.update_traces(
@@ -450,8 +450,8 @@ def make_probability_chart(prediction):
     )
 
     fig.update_layout(
-        yaxis_title="Probability (%)",
-        xaxis_title="Result",
+        yaxis_title="概率 (%)",
+        xaxis_title="结果",
         yaxis_range=[0, 100],
     )
 
@@ -1427,8 +1427,8 @@ def simulate_tournament_monte_carlo(
 # App layout
 # =========================
 
-st.title("⚽ World Cup 2026 Match Predictor")
-st.caption("Elo model + recent 10-match form model")
+st.title("⚽ 2026 世界杯预测")
+st.caption("基于 Elo 评级 + 近 10 场状态的预测模型")
 
 tab_single, tab_group, tab_knockout, tab_tournament, tab_model = st.tabs(
     [
@@ -1452,21 +1452,21 @@ with tab_single:
 
     with col1:
         team_a = st.selectbox(
-            "Team A",
+            "主队",
             TEAM_OPTIONS,
             index=TEAM_OPTIONS.index("Argentina") if "Argentina" in TEAM_OPTIONS else 0,
         )
 
     with col2:
         team_b = st.selectbox(
-            "Team B",
+            "客队",
             TEAM_OPTIONS,
             index=TEAM_OPTIONS.index("France") if "France" in TEAM_OPTIONS else 1,
         )
 
     with col3:
-        neutral = st.checkbox("Neutral venue", value=True)
-        is_world_cup = st.checkbox("World Cup match", value=True)
+        neutral = st.checkbox("中立场地", value=True)
+        is_world_cup = st.checkbox("世界杯比赛", value=True)
 
     if team_a == team_b:
         st.warning("请选择两支不同球队。")
@@ -1504,11 +1504,11 @@ with tab_single:
         st.markdown("### 两队 Elo 与近 10 场状态对比")
         st.dataframe(make_team_comparison(team_a, team_b))
 
-        st.markdown("### 本场比赛输入模型的特征")
-        st.dataframe(features.round(3))
-
-        st.markdown("### 概率表")
-        st.dataframe(prediction)
+        with st.expander("🔍 查看模型特征与原始概率"):
+            st.markdown("#### 本场比赛输入模型的特征")
+            st.dataframe(features.round(3))
+            st.markdown("#### 原始概率表")
+            st.dataframe(prediction)
 
         st.markdown("### 综合强度 / 阵容修正模块")
 
@@ -1565,34 +1565,34 @@ with tab_single:
         key="single_match_adjusted_probability_chart",
         )
 
-        st.markdown("#### 基础 Elo 概率 vs 综合强度修正后概率")
+        with st.expander("📊 查看综合强度详细对比"):
+            comparison_probability = adjusted_prediction[
+                [
+                    "result",
+                    "probability_percent",
+                    "adjusted_probability_percent",
+                    "squad_strength_team_a",
+                    "squad_strength_team_b",
+                    "squad_strength_diff",
+                ]
+            ].copy()
 
-        comparison_probability = adjusted_prediction[
-            [
-                "result",
-                "probability_percent",
-                "adjusted_probability_percent",
-                "squad_strength_team_a",
-                "squad_strength_team_b",
-                "squad_strength_diff",
-            ]
-        ].copy()
+            comparison_probability = comparison_probability.rename(
+                columns={
+                    "probability_percent": "base_elo_probability_%",
+                    "adjusted_probability_percent": "squad_adjusted_probability_%",
+                }
+            )
 
-        comparison_probability = comparison_probability.rename(
-            columns={
-                "probability_percent": "base_elo_probability_%",
-                "adjusted_probability_percent": "squad_adjusted_probability_%",
-            }
-        )
+            st.markdown("#### 基础 Elo 概率 vs 综合强度修正后概率")
+            st.dataframe(comparison_probability)
 
-        st.dataframe(comparison_probability)
+            st.markdown("#### 两队综合强度 / 阵容字段对比")
+            st.dataframe(make_squad_strength_comparison(team_a, team_b))
 
-        st.markdown("#### 两队综合强度 / 阵容字段对比")
-        st.dataframe(make_squad_strength_comparison(team_a, team_b))
-
-        st.caption(
-            "注意：当前 FIFA rank / FIFA points 来自 FIFA official API；squad value 来自 Transfermarkt World Cup 2026 participants page；avg_player_rating、top5_player_rating、star_rating 是根据 FIFA points 和 Transfermarkt market value 生成的 proxy rating；star_available、injury_count 和 injury_adjusted_squad_strength_score 已根据 48 队 injury audit 更新；但伤病状态会随赛前新闻变化，建议在比赛前定期复核。当前 adjusted probability 使用 FIFA points、Transfermarkt squad value 和 proxy rating 共同生成的 strength score 进行修正。"
-        )
+            st.caption(
+                "数据来源：FIFA official API（FIFA rank / FIFA points）；Transfermarkt（squad value）；proxy rating 由 FIFA points 和 Transfermarkt market value 推算；伤病数据已根据 48 队 injury audit 更新，建议赛前定期复核。"
+            )
 
 # =========================
 # Tab 2: Group stage
@@ -1631,8 +1631,7 @@ with tab_group:
             "和 star unavailable penalty。"
         )
 
-    st.markdown(f"### {selected_group} teams")
-    st.write(", ".join(GROUPS_2026[selected_group]))
+    st.markdown(f"### {selected_group} 参赛球队：{', '.join(GROUPS_2026[selected_group])}")
 
     group_predictions = predict_group_matches(selected_group)
     expected_table = make_expected_group_table(selected_group)
@@ -1670,7 +1669,7 @@ with tab_group:
         x="team",
         y="expected_points",
         text="expected_points",
-        title=f"{selected_group} Base Elo Expected Points",
+        title=f"{selected_group} 基础 Elo 预期积分",
     )
 
     fig_group.update_traces(
@@ -1679,8 +1678,8 @@ with tab_group:
     )
 
     fig_group.update_layout(
-        yaxis_title="Expected Points",
-        xaxis_title="Team",
+        yaxis_title="预期积分",
+        xaxis_title="球队",
     )
 
     st.plotly_chart(fig_group, use_container_width=True, key="group_base_expected_points_chart")
@@ -1709,7 +1708,7 @@ with tab_group:
         x="team",
         y="squad_adjusted_expected_points",
         text="squad_adjusted_expected_points",
-        title=f"{selected_group} Squad-adjusted Expected Points",
+        title=f"{selected_group} 综合强度修正后预期积分",
     )
 
     fig_group_adjusted.update_traces(
@@ -1718,47 +1717,46 @@ with tab_group:
     )
 
     fig_group_adjusted.update_layout(
-        yaxis_title="Squad-adjusted Expected Points",
-        xaxis_title="Team",
+        yaxis_title="综合强度修正后预期积分",
+        xaxis_title="球队",
     )
 
     st.plotly_chart(fig_group_adjusted, use_container_width=True, key="group_adjusted_expected_points_chart")
 
-    st.markdown("### 基础 Elo 排名 vs 综合强度修正后排名")
-
-    rank_comparison = expected_table[
-        [
-            "expected_rank",
-            "team",
-            "expected_points",
-        ]
-    ].merge(
-        squad_adjusted_group_table[
+    with st.expander("📋 查看 Elo vs 综合强度排名对比"):
+        rank_comparison = expected_table[
             [
-                "squad_adjusted_expected_rank",
+                "expected_rank",
                 "team",
-                "squad_adjusted_expected_points",
-                "squad_strength_score",
+                "expected_points",
             ]
-        ],
-        on="team",
-        how="left",
-    )
+        ].merge(
+            squad_adjusted_group_table[
+                [
+                    "squad_adjusted_expected_rank",
+                    "team",
+                    "squad_adjusted_expected_points",
+                    "squad_strength_score",
+                ]
+            ],
+            on="team",
+            how="left",
+        )
 
-    rank_comparison["rank_change_after_squad_adjustment"] = (
-        rank_comparison["expected_rank"]
-        - rank_comparison["squad_adjusted_expected_rank"]
-    )
+        rank_comparison["rank_change_after_squad_adjustment"] = (
+            rank_comparison["expected_rank"]
+            - rank_comparison["squad_adjusted_expected_rank"]
+        )
 
-    rank_comparison = rank_comparison.sort_values(
-        "squad_adjusted_expected_rank"
-    ).reset_index(drop=True)
+        rank_comparison = rank_comparison.sort_values(
+            "squad_adjusted_expected_rank"
+        ).reset_index(drop=True)
 
-    st.dataframe(rank_comparison)
+        st.dataframe(rank_comparison)
 
-    st.caption(
-        "rank_change_after_squad_adjustment > 0 表示综合强度修正后排名上升；< 0 表示排名下降。当前综合强度主要由 FIFA 官方积分、Transfermarkt 阵容总市值和 proxy rating 共同生成；star_available、injury_count 和 injury_adjusted_squad_strength_score 已根据 48 队 injury audit 更新；但伤病状态会随赛前新闻变化，建议在比赛前定期复核。"
-    )
+        st.caption(
+            "rank_change > 0 表示修正后排名上升；< 0 表示下降。综合强度由 FIFA 积分、Transfermarkt 市值和 proxy rating 共同生成；伤病数据已根据 48 队 audit 更新，建议赛前定期复核。"
+        )
 
 
     st.markdown("### Monte Carlo 小组出线概率模拟")
@@ -1797,7 +1795,7 @@ with tab_group:
             x="team",
             y="qualification_%",
             text="qualification_%",
-            title=f"{selected_group} Monte Carlo Qualification Probability",
+            title=f"{selected_group} Monte Carlo 出线概率",
         )
 
         fig_group_monte_carlo.update_traces(
@@ -1806,8 +1804,8 @@ with tab_group:
         )
 
         fig_group_monte_carlo.update_layout(
-            yaxis_title="Qualification Probability (%)",
-            xaxis_title="Team",
+            yaxis_title="出线概率 (%)",
+            xaxis_title="球队",
         )
 
         st.plotly_chart(
@@ -1833,14 +1831,14 @@ with tab_knockout:
 
     with col1:
         ko_team_a = st.selectbox(
-            "Knockout Team A",
+            "淘汰赛 主队",
             TEAM_OPTIONS,
             index=TEAM_OPTIONS.index("Canada") if "Canada" in TEAM_OPTIONS else 0,
         )
 
     with col2:
         ko_team_b = st.selectbox(
-            "Knockout Team B",
+            "淘汰赛 客队",
             TEAM_OPTIONS,
             index=TEAM_OPTIONS.index("Senegal") if "Senegal" in TEAM_OPTIONS else 1,
         )
@@ -1894,8 +1892,6 @@ with tab_knockout:
         key="knockout_base_probability_chart",
         )
 
-        st.dataframe(ko_prediction)
-
         st.markdown("### 90 分钟综合强度修正后胜 / 平 / 负概率")
 
         ko_adjusted_display = ko_adjusted_prediction[
@@ -1917,23 +1913,24 @@ with tab_knockout:
         key="knockout_adjusted_probability_chart",
         )
 
-        st.dataframe(
-            ko_adjusted_prediction[
-                [
-                    "result",
-                    "probability_percent",
-                    "adjusted_probability_percent",
-                    "squad_strength_team_a",
-                    "squad_strength_team_b",
-                    "squad_strength_diff",
-                ]
-            ].rename(
-                columns={
-                    "probability_percent": "base_elo_probability_%",
-                    "adjusted_probability_percent": "squad_adjusted_probability_%",
-                }
+        with st.expander("🔍 查看基础 vs 修正概率对比"):
+            st.dataframe(
+                ko_adjusted_prediction[
+                    [
+                        "result",
+                        "probability_percent",
+                        "adjusted_probability_percent",
+                        "squad_strength_team_a",
+                        "squad_strength_team_b",
+                        "squad_strength_diff",
+                    ]
+                ].rename(
+                    columns={
+                        "probability_percent": "base_elo_probability_%",
+                        "adjusted_probability_percent": "squad_adjusted_probability_%",
+                    }
+                )
             )
-        )
 
         st.markdown("### 基础近似晋级概率")
 
@@ -1946,7 +1943,7 @@ with tab_knockout:
             x="team",
             y="advance_probability_percent",
             text="advance_probability_percent",
-            title="Base Approximate Advance Probability",
+            title="基础近似晋级概率",
         )
 
         fig_advance.update_traces(
@@ -1955,14 +1952,12 @@ with tab_knockout:
         )
 
         fig_advance.update_layout(
-            yaxis_title="Advance Probability (%)",
-            xaxis_title="Team",
+            yaxis_title="晋级概率 (%)",
+            xaxis_title="球队",
             yaxis_range=[0, 100],
         )
 
         st.plotly_chart(fig_advance, use_container_width=True, key="knockout_base_advance_chart")
-
-        st.dataframe(ko_advance)
 
         st.markdown("### 综合强度修正后近似晋级概率")
 
@@ -1971,7 +1966,7 @@ with tab_knockout:
             x="team",
             y="adjusted_advance_probability_percent",
             text="adjusted_advance_probability_percent",
-            title="Squad-adjusted Approximate Advance Probability",
+            title="综合强度修正后近似晋级概率",
         )
 
         fig_adjusted_advance.update_traces(
@@ -1980,20 +1975,20 @@ with tab_knockout:
         )
 
         fig_adjusted_advance.update_layout(
-            yaxis_title="Adjusted Advance Probability (%)",
-            xaxis_title="Team",
+            yaxis_title="修正后晋级概率 (%)",
+            xaxis_title="球队",
             yaxis_range=[0, 100],
         )
 
         st.plotly_chart(fig_adjusted_advance, use_container_width=True, key="knockout_adjusted_advance_chart")
 
-        st.dataframe(ko_adjusted_advance)
-
-        st.markdown("### 本场比赛输入模型的特征")
-        st.dataframe(ko_features.round(3))
-
-        st.markdown("### 两队综合强度 / 阵容字段对比")
-        st.dataframe(make_squad_strength_comparison(ko_team_a, ko_team_b))
+        with st.expander("📊 查看详细数据"):
+            st.markdown("#### 修正后晋级概率表")
+            st.dataframe(ko_adjusted_advance)
+            st.markdown("#### 本场比赛输入模型的特征")
+            st.dataframe(ko_features.round(3))
+            st.markdown("#### 两队综合强度 / 阵容字段对比")
+            st.dataframe(make_squad_strength_comparison(ko_team_a, ko_team_b))
 
 
 # =========================
@@ -2003,12 +1998,17 @@ with tab_knockout:
 with tab_tournament:
     st.subheader("整届世界杯 Monte Carlo 模拟")
 
-    st.caption(
-        "当前是 simplified tournament simulation V1：每组前 2 名出线，共 24 队；"
-        "8 个最佳小组第一直接进入 Round of 16；其余 16 队先打 Round of 24。"
-        "后续淘汰赛采用重新种子排序：最高种子 vs 最低种子。"
-        "这不是官方完整 bracket 版本，但可以先用于估计整届赛事路径概率。"
-    )
+    st.caption("每组前 2 名出线共 24 队；积分最佳的 8 个小组第一获轮空直接晋级 16 强；其余 16 队先打附加赛。概率为估算值，非官方 bracket。")
+    with st.expander("🔧 查看模拟方法详情"):
+        st.markdown(
+            """
+- 每组前 2 名出线，共 24 队进入淘汰阶段
+- 积分最佳的 8 个小组第一直接进入 Round of 16（轮空）
+- 其余 16 队打 Round of 24，胜者与轮空队共同组成 16 强
+- 后续淘汰赛重新种子排序：最高种子 vs 最低种子
+- V1 简化版：不模拟具体比分，tie-breakers 用积分、胜场、Elo、综合强度近似处理
+            """
+        )
 
     tournament_col1, tournament_col2, tournament_col3 = st.columns(3)
 
@@ -2071,7 +2071,7 @@ with tab_tournament:
             x="team",
             y="champion_%",
             text="champion_%",
-            title="Tournament Monte Carlo Champion Probability - Top 20",
+            title="Monte Carlo 冠军概率 — Top 20",
         )
 
         fig_tournament_champion.update_traces(
@@ -2080,8 +2080,8 @@ with tab_tournament:
         )
 
         fig_tournament_champion.update_layout(
-            yaxis_title="Champion Probability (%)",
-            xaxis_title="Team",
+            yaxis_title="冠军概率 (%)",
+            xaxis_title="球队",
         )
 
         st.plotly_chart(
@@ -2106,89 +2106,54 @@ with tab_tournament:
 # =========================
 
 with tab_model:
-    st.subheader("模型说明与下一步")
+    st.subheader("模型说明")
 
     st.markdown(
         """
-### 当前网页使用的模型
+### 当前模型
 
-现在 dashboard 使用的是 **Elo + 最近 10 场状态模型**。
+**Elo + 近 10 场状态模型**，预测三分类结果（胜 / 平 / 负）。
 
-模型输入特征包括：
-
-`elo_diff`
-
-`goals_for_roll10_diff`
-
-`goals_against_roll10_diff`
-
-`points_roll10_diff`
-
-`win_rate_roll10_diff`
-
-`draw_rate_roll10_diff`
-
-`loss_rate_roll10_diff`
-
-`neutral`
-
-`is_world_cup`
+模型基于两队特征差值进行预测，核心特征为 Elo 差值与近期状态统计差值。
 
 ---
 
-### 当前模型相比旧模型的提升
+### 模型表现
 
-旧模型只使用最近 10 场状态，测试结果大约是：
+| 模型 | Accuracy | Log Loss |
+|------|----------|----------|
+| 仅近 10 场状态 | 0.5435 | 0.9687 |
+| Elo + 近 10 场状态 | 0.6008 | 0.8837 |
 
-- Accuracy: 0.5435
-- Log Loss: 0.9687
-
-加入 Elo 后，测试结果变成：
-
-- Accuracy: 0.6008
-- Log Loss: 0.8837
-
-所以 Elo 明显提高了模型预测能力。
+加入 Elo 后预测准确率显著提升。
 
 ---
 
-### 现在还存在的问题
+### 关于平局预测
 
-当前模型虽然能输出平局概率，但最终硬分类仍然很少预测平局。
-
-这是因为平局概率通常在 20%-28% 之间，很少成为三类里面最高的概率。
-
-因此 dashboard 里更适合看概率，而不是只看最终分类。
+平局概率通常在 20%–28% 之间，很少成为三类中最高概率，因此建议参考概率分布而非单一预测结果。
 
 ---
 
-### 下一步可以加入更完整的阵容和球员影响
+### 综合强度修正
 
-球员与阵容影响建议先作为一个独立的修正模块，而不是马上放进训练模型。
-
-原因是：
-
-- Elo 可以从历史比赛直接计算
-- 更完整的阵容数据需要球员名单、球员评分、身价、伤病、是否首发等数据
-- 如果没有历史阵容数据，直接训练球员/阵容模型容易产生时间错配
-
-下一步可以新建：
-
-`data/world_cup_2026_squad_strength.csv`
-
-里面放：
-
-- squad_value_m
-- avg_player_rating
-- top5_player_rating
-- star_rating
-- star_available
-- injury_count
-
-然后 dashboard 显示：
-
-基础 Elo 概率  
-+  
-综合强度修正后概率
+在 Elo 基础预测之上叠加综合强度修正模块（权重可调），使用 FIFA 积分、Transfermarkt 市值和 proxy rating 共同生成的 strength score 对胜负概率进行微调。
         """
     )
+
+    with st.expander("📐 查看模型特征列表"):
+        st.markdown(
+            """
+模型输入特征（均为 A 队 − B 队差值形式）：
+
+- `elo_diff`
+- `goals_for_roll10_diff`
+- `goals_against_roll10_diff`
+- `points_roll10_diff`
+- `win_rate_roll10_diff`
+- `draw_rate_roll10_diff`
+- `loss_rate_roll10_diff`
+- `neutral`（中立场地标志）
+- `is_world_cup`（世界杯比赛标志）
+            """
+        )
